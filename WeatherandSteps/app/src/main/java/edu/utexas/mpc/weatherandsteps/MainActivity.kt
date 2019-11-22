@@ -105,9 +105,6 @@ class MainActivity : AppCompatActivity() {
                 message.payload = "Hello".toByteArray()
             }
 
-
-
-
             // this method is called when a message is received that fulfills a subscription
             override fun messageArrived(topic: String?, message: MqttMessage?) {
                 println(message)
@@ -118,7 +115,7 @@ class MainActivity : AppCompatActivity() {
                 println("Connection Lost")
             }
 
-            // this method is called when the client succcessfully publishes to the broker
+            // this method is called when the client successfully publishes to the broker
             override fun deliveryComplete(token: IMqttDeliveryToken?) {
                 println("Delivery Complete")
             }
@@ -146,13 +143,11 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         println("not raining")
                     }
-                    textView2.text = mostRecentWeatherResult.weather.get(0).main+"\n"+"Temperature - " +mostRecentWeatherResult.main.temp.toString()+"°F"+"\nPrecipitation: "+prec
-
 
                     tempe = mostRecentWeatherResult.main.temp.toString()+"°F"
                     temp_high=mostRecentWeatherResult.main.temp_max.toString()+"°F"
                     temp_low=mostRecentWeatherResult.main.temp_min.toString()+"°F"
-
+                    textView2.text = "Weather Today:\nMax Temp: " +temp_high+"\nMin Temp: " +temp_low+"\nPrecipitation: "+prec
                     temp_main = mostRecentWeatherResult.weather.get(0).main
                     println(temp_high)
                     Picasso.with(this).load(iconUrl).into(imageView1)
@@ -193,7 +188,7 @@ class MainActivity : AppCompatActivity() {
                     tomorrow_temp_max /= number_of_tomorrow_objects
                     tomorrow_precipitation /= number_of_tomorrow_objects
                     println("tomorrow temp min = ${tomorrow_temp_min} temp max = ${tomorrow_temp_max} precipitation = ${tomorrow_precipitation} ")
-                    textView3.text = "Weather Forecast: \nMax Temp: " + "%.2f".format(tomorrow_temp_min) + ("\nMin Temp: ") + "%.2f".format(tomorrow_temp_max) + ("\nPrecipitation: ") + "%.2f".format(tomorrow_precipitation)
+                    textView3.text = "Weather Forecast: \nMax Temp: " + "%.2f".format(tomorrow_temp_min)+"°F" + ("\nMin Temp: ") + "%.2f".format(tomorrow_temp_max)+"°F" + ("\nPrecipitation: ") + "%.2f".format(tomorrow_precipitation)
                     val iconUrl = "http://openweathermap.org/img/wn/"+mostRecentWeatherResultForecast.list.get(2).weather.get(0).icon+".png"
 //
                     Picasso.with(this).load(iconUrl).into(imageView)

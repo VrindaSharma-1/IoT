@@ -81,27 +81,27 @@
 
     <TextView
         android:id="@+id/text1"
-        android:layout_width="257dp"
-        android:layout_height="49dp"
-        android:layout_marginStart="92dp"
+        android:layout_width="261dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="84dp"
         android:text=""
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.457" />
+        app:layout_constraintVertical_bias="0.444" />
 
     <TextView
         android:id="@+id/text2"
-        android:layout_width="254dp"
-        android:layout_height="53dp"
-        android:layout_marginStart="92dp"
+        android:layout_width="284dp"
+        android:layout_height="77dp"
+        android:layout_marginStart="76dp"
         android:text=""
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.553" />
+        app:layout_constraintVertical_bias="0.53" />
 
     <TextView
         android:id="@+id/text3"
