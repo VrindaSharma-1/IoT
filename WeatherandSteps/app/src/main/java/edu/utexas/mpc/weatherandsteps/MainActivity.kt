@@ -1,7 +1,17 @@
 package edu.utexas.mpc.weatherandsteps
 
+import android.content.Context
+import android.content.DialogInterface
+import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkInfo
+import android.net.wifi.WifiInfo
+import android.net.wifi.WifiManager
 import android.os.Bundle
+import android.provider.Settings
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import org.eclipse.paho.android.service.MqttAndroidClient
@@ -9,11 +19,13 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import android.widget.ImageView
+import android.widget.Toast
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.google.gson.Gson
 import com.squareup.picasso.Picasso
+import kotlinx.android.synthetic.main.activity_main.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -30,6 +42,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var publishButton: Button
     lateinit var retrieveButton: Button
     lateinit var retrieveCurrentButton: Button
+    lateinit var switchNetwork: Button
     lateinit var imageView: ImageView
     lateinit var imageView1: ImageView
 
@@ -77,6 +90,7 @@ class MainActivity : AppCompatActivity() {
         retrieveButton = this.findViewById(R.id.retrieveButton)
         retrieveCurrentButton = this.findViewById(R.id.retrieveCurrentButton)
         publishButton = this.findViewById(R.id.publishButton)
+        switchNetwork = this.findViewById(R.id.switchButton)
         imageView = this.findViewById(R.id.imageView)
         imageView1 = this.findViewById(R.id.imageView1)
 
@@ -85,6 +99,7 @@ class MainActivity : AppCompatActivity() {
         retrieveCurrentButton.setOnClickListener({ requestcurrentWeather() })
         retrieveButton.setOnClickListener({ requestWeather() })
         publishButton.setOnClickListener({publishWeather(tempe,temp_main)})
+        switchNetwork.setOnClickListener({ switchNetwork() })
         queue = Volley.newRequestQueue(this)
         gson = Gson()
 
@@ -128,7 +143,7 @@ class MainActivity : AppCompatActivity() {
 
 
 //        val url = StringBuilder("https://api.openweathermap.org/data/2.5/weather?id=4254010&appid=0eec983777956761c513884e4255097a").toString()
-        val url = StringBuilder("https://api.openweathermap.org/data/2.5/weather?q=Austin,us&appid=0eec983777956761c513884e4255097a&units=metric").toString()
+        val url = StringBuilder("https://api.openweathermap.org/data/2.5/weather?q=Austin,us&appid=0eec983777956761c513884e4255097a&units=imperial").toString()
 
         val stringRequest = object : StringRequest(com.android.volley.Request.Method.GET, url,
                 com.android.volley.Response.Listener<String> { response ->
@@ -160,7 +175,7 @@ class MainActivity : AppCompatActivity() {
 
     fun requestWeather(){
 
-        val forecast_url = StringBuilder("http://api.openweathermap.org/data/2.5/forecast?q=Austin,us&appid=0eec983777956761c513884e4255097a&units=metric").toString()
+        val forecast_url = StringBuilder("http://api.openweathermap.org/data/2.5/forecast?q=Austin,us&appid=0eec983777956761c513884e4255097a&units=imperial").toString()
         val stringRequest2 = object : StringRequest(com.android.volley.Request.Method.GET, forecast_url,
                 com.android.volley.Response.Listener<String> { response ->
                     mostRecentWeatherResultForecast = gson.fromJson(response, WeatherResultForecast::class.java)
@@ -169,10 +184,10 @@ class MainActivity : AppCompatActivity() {
                     val tomorrow = calendar.getTime()
                     val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
                     val tomorrowAsString = dateFormat.format(tomorrow)
-                    var tomorrow_temp_min = 0.0
-                    var tomorrow_temp_max = 0.0
-                    var number_of_tomorrow_objects = 0.0
-                    var tomorrow_precipitation = 0.0
+                    tomorrow_temp_min = 0.0
+                    tomorrow_temp_max = 0.0
+                    number_of_tomorrow_objects = 0.0
+                    tomorrow_precipitation = 0.0
                     for (item in mostRecentWeatherResultForecast.list) {
                         if (tomorrowAsString.toString() in item.dt_txt) {
                             number_of_tomorrow_objects += 1.0
@@ -203,7 +218,7 @@ class MainActivity : AppCompatActivity() {
         val message = MqttMessage()
         // this publishes a message to the publish topic
 
-        message.payload = temp_high.toByteArray() + (",").toByteArray() + temp_low.toByteArray() + (",").toByteArray() + prec.toString().toByteArray()+",".toByteArray()+tomorrow_temp_min.toString().toByteArray() + (",").toByteArray() + tomorrow_temp_max.toString().toByteArray() + (",").toByteArray() + tomorrow_precipitation.toString().toByteArray()
+        message.payload = temp_high.toByteArray() + (",").toByteArray() + temp_low.toByteArray() + (",").toByteArray() + prec.toString().toByteArray()+",".toByteArray()+"%.2f".format(tomorrow_temp_min).toByteArray() + (",").toByteArray() + "%.2f".format(tomorrow_temp_max).toByteArray() + (",").toByteArray() + "%.2f".format(tomorrow_precipitation).toByteArray()
         mqttAndroidClient.publish(publishTopic, message)
 
         textView2.text = "Weather Forecast: " + message.toString()
@@ -214,6 +229,58 @@ class MainActivity : AppCompatActivity() {
         println("+++++++ Connecting...")
         mqttAndroidClient.connect()
     }
+
+    fun switchNetwork(){
+        startActivity(Intent(Settings.ACTION_WIFI_SETTINGS));
+        basicAlert();
+        showNetwork()
+    }
+
+    val positiveButtonClick = {dialog:DialogInterface,which:Int ->Toast.makeText(applicationContext,android.R.string.yes,Toast.LENGTH_SHORT).show()}
+    val negativeButtonClick = {dialog:DialogInterface,which:Int ->switchNetwork()}
+    fun basicAlert(){
+
+        val builder = AlertDialog.Builder(this)
+
+
+        with(builder)
+        {
+            setTitle("Network Alert")
+            setMessage("Did you switch your wiFi network to IOT-MIS-20?")
+            setPositiveButton("Yes", DialogInterface.OnClickListener(function = positiveButtonClick))
+            setNegativeButton(android.R.string.no, negativeButtonClick)
+//            setNeutralButton("Maybe", neutralButtonClick)
+            show()
+
+        }
+
+
+    }
+    fun showNetwork()
+    {
+
+        val connectivityManager = this.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetwork: NetworkInfo? = connectivityManager.activeNetworkInfo
+        val isConnected: Boolean = activeNetwork?.isConnected == true
+        if ((activeNetwork?.extraInfo).toString()=="IOT-MIS-20")
+        {println(activeNetwork?.extraInfo)}
+        else println("Damn!")
+//        var cnf=""
+//        if(activeNetwork?.extraInfo.equals("IOT-MIS-20"))
+//        {
+//            cnf = "True"
+//        }
+//        else
+//            switchNetwork()
+//        return cnf
+
+//        println(isConnected)
+//        println(activeNetwork?.extraInfo)
+//        textView1.text = "You are connected to "+activeNetwork?.extraInfo
+
+    }
+
+
 
 }
 
