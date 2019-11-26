@@ -87,7 +87,7 @@ class MainActivity : AppCompatActivity() {
         // when the user presses the syncbutton, this method will get called
         syncButton.setOnClickListener({ syncWithPi() })
 //        textView = this.findViewById(R.id.text)
-        retrieveButton = this.findViewById(R.id.retrieveButton)
+//        retrieveButton = this.findViewById(R.id.retrieveButton)
         retrieveCurrentButton = this.findViewById(R.id.retrieveCurrentButton)
         publishButton = this.findViewById(R.id.publishButton)
         switchNetwork = this.findViewById(R.id.switchButton)
@@ -97,8 +97,8 @@ class MainActivity : AppCompatActivity() {
 
         // when the user presses the syncbutton, this method will get called
         retrieveCurrentButton.setOnClickListener({ requestcurrentWeather() })
-        retrieveButton.setOnClickListener({ requestWeather() })
-        publishButton.setOnClickListener({publishWeather(tempe,temp_main)})
+//        retrieveButton.setOnClickListener({ requestWeather() })
+        publishButton.setOnClickListener({publishWeather()})
         switchNetwork.setOnClickListener({ switchNetwork() })
         queue = Volley.newRequestQueue(this)
         gson = Gson()
@@ -115,7 +115,7 @@ class MainActivity : AppCompatActivity() {
                 // this subscribes the client to the subscribe topic
                 mqttAndroidClient.subscribe(subscribeTopic, 0)
 
-
+//                publishWeather()
                 val message = MqttMessage()
                 message.payload = "Hello".toByteArray()
             }
@@ -170,6 +170,7 @@ class MainActivity : AppCompatActivity() {
                 com.android.volley.Response.ErrorListener { println("******That didn't work!") }) {}
         // Add the request to the RequestQueue.
         queue.add(stringRequest)
+        requestWeather()
     }
 
 
@@ -214,14 +215,14 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun publishWeather(tempe:String,temp_main:String) {
+    fun publishWeather() {
         val message = MqttMessage()
         // this publishes a message to the publish topic
 
         message.payload = temp_high.toByteArray() + (",").toByteArray() + temp_low.toByteArray() + (",").toByteArray() + prec.toString().toByteArray()+",".toByteArray()+"%.2f".format(tomorrow_temp_min).toByteArray() + (",").toByteArray() + "%.2f".format(tomorrow_temp_max).toByteArray() + (",").toByteArray() + "%.2f".format(tomorrow_precipitation).toByteArray()
         mqttAndroidClient.publish(publishTopic, message)
 
-        textView2.text = "Weather Forecast: " + message.toString()
+//        textView2.text = "Weather Forecast: " + message.toString()
     }
         // this method just connects the paho mqtt client to the broker
 
