@@ -1,9 +1,13 @@
 package edu.utexas.mpc.weatherandsteps
 
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.wifi.WifiInfo
@@ -26,9 +30,11 @@ import android.widget.Toast
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import com.google.android.gms.location.LocationServices
 import com.google.gson.Gson
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
+import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -58,6 +64,12 @@ class Steps: AppCompatActivity(){
     lateinit var gson: Gson
     lateinit var mostRecentWeatherResult: WeatherResult
     lateinit var mostRecentWeatherResultForecast: WeatherResultForecast
+    var latitude: Double = 0.0
+    var longitude: Double = 0.0
+
+    lateinit var locationManager: LocationManager
+    private var hasGps = false
+    private var locationGps: Location? = null
 
     // I'm doing a late init here because I need this to be an instance variable but I don't
     // have all the info I need to initialize it yet
@@ -91,9 +103,18 @@ class Steps: AppCompatActivity(){
 
 
 
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.steps)
+
+        println("ON CREATE")
+//        var client = LocationServices.getFusedLocationProviderClient(this)
+
+
+
+
         textView1 = this.findViewById(R.id.text)
         textView = this.findViewById(R.id.text1)
         textView2 = this.findViewById(R.id.text2)
@@ -114,6 +135,7 @@ class Steps: AppCompatActivity(){
         imageView = this.findViewById(R.id.imageView)
         imageView1 = this.findViewById(R.id.imageView1)
 
+        getLocation()
 
         // when the user presses the syncbutton, this method will get called
         retrieveCurrentButton.setOnClickListener({ requestcurrentWeather() })
@@ -158,12 +180,70 @@ class Steps: AppCompatActivity(){
 
     }
 
+    @SuppressLint("MissingPermission")
+    private fun getLocation() {
+        try {
+//            retrieveCurrentButton.isEnabled = false
+            retrieveCurrentButton.isClickable = false
+            locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            hasGps = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+
+            if (hasGps) {
+                println("i has GPS power")
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0F, object : LocationListener {
+                    override fun onLocationChanged(location: Location?) {
+                        if (location != null) {
+                            locationGps = location
+                            longitude = locationGps!!.longitude
+                            latitude = locationGps!!.latitude
+                            println("GPS lat :  ${latitude}")
+                            println("GPS long :  ${longitude}")
+                            // stops the device from continuously listening for location
+                            locationManager.removeUpdates(this)
+                            retrieveCurrentButton.isClickable = true
+                        }
+
+                    }
+
+                    override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {
+
+                    }
+
+                    override fun onProviderEnabled(p0: String?) {
+
+                    }
+
+                    override fun onProviderDisabled(p0: String?) {
+
+                    }
+                })
+                val localGpsLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                if (localGpsLocation != null)
+                    //println("had a location at the start. Probably won't happen for us ")
+                    locationGps = localGpsLocation
+                    longitude = locationGps!!.longitude
+                    latitude = locationGps!!.latitude
+                    println("GPS lat :  ${latitude}")
+                    println("GPS long :  ${longitude}")
+                    // stops the device from continuously listening for location
+                    retrieveCurrentButton.isClickable = true
+            }
+
+        } catch (e: Exception) {
+            println(e.toString())
+        }
+    }
+
 
     fun requestcurrentWeather(){
 
 
 //        val url = StringBuilder("https://api.openweathermap.org/data/2.5/weather?id=4254010&appid=0eec983777956761c513884e4255097a").toString()
-        val url = StringBuilder("https://api.openweathermap.org/data/2.5/weather?q=Austin,us&appid=0eec983777956761c513884e4255097a&units=imperial").toString()
+        // hard coded city name
+//        val url = StringBuilder("https://api.openweathermap.org/data/2.5/weather?q=Austin,us&appid=0eec983777956761c513884e4255097a&units=imperial").toString()
+        // lat/long coordinates
+        val url = StringBuilder("https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=0eec983777956761c513884e4255097a&units=imperial").toString()
+
 
         val stringRequest = object : StringRequest(com.android.volley.Request.Method.GET, url,
                 com.android.volley.Response.Listener<String> { response ->
@@ -196,7 +276,10 @@ class Steps: AppCompatActivity(){
 
     fun requestWeather(){
 
-        val forecast_url = StringBuilder("http://api.openweathermap.org/data/2.5/forecast?q=Austin,us&appid=0eec983777956761c513884e4255097a&units=imperial").toString()
+        // hard coded city
+       // val forecast_url = StringBuilder("http://api.openweathermap.org/data/2.5/forecast?q=Austin,us&appid=0eec983777956761c513884e4255097a&units=imperial").toString()
+        // lat/long coordinates
+        val forecast_url = StringBuilder("http://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&appid=0eec983777956761c513884e4255097a&units=imperial").toString()
         val stringRequest2 = object : StringRequest(com.android.volley.Request.Method.GET, forecast_url,
                 com.android.volley.Response.Listener<String> { response ->
                     mostRecentWeatherResultForecast = gson.fromJson(response, WeatherResultForecast::class.java)

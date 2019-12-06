@@ -1,16 +1,22 @@
 package edu.utexas.mpc.weatherandsteps
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 
 
 import edu.utexas.mpc.weatherandsteps.Global
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.steps.view.*
 
+private const val PERMISSION_REQUEST = 10
 
 class MainActivity : AppCompatActivity() {
 
@@ -28,14 +34,19 @@ class MainActivity : AppCompatActivity() {
     // I'm doing a late init here because I need this to be an instance variable but I don't
     // have all the info I need to initialize it yet
 
-
+    private var permissions = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!checkPermission(permissions)) {
+                requestPermissions(permissions, PERMISSION_REQUEST)
+            }
+        }
 //        textView1 = this.findViewById(R.id.text)
 //        textView = this.findViewById(R.id.text1)
 //        textView2 = this.findViewById(R.id.text2)
-//        textView3 = this.findViewById(R.id.text3)
+//        textView3 = this.findViewById
         nextButton = this.findViewById(R.id.nextButton)
         cancelButton = this.findViewById(R.id.cancelButton)
         cancelButton.setOnClickListener{
@@ -78,6 +89,33 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun checkPermission(permissionArray: Array<String>): Boolean {
+        var allSuccess = true
+        for (i in permissionArray.indices) {
+            if (checkCallingOrSelfPermission(permissionArray[i]) == PackageManager.PERMISSION_DENIED)
+                allSuccess = false
+        }
+        return allSuccess
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PERMISSION_REQUEST) {
+            var allSuccess = true
+            for (i in permissions.indices) {
+                if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+                    allSuccess = false
+                    val requestAgain = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && shouldShowRequestPermissionRationale(permissions[i])
+                    if (requestAgain) {
+                        Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this, "Go to settings and enable the permission", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+
+        }
+    }
 }
 
 
